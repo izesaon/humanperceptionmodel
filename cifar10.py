@@ -46,19 +46,15 @@ import tensorflow as tf
 
 import cifar10_input
 
-parser = argparse.ArgumentParser()
+FLAGS = tf.app.flags.FLAGS
 
 # Basic model parameters.
-parser.add_argument('--batch_size', type=int, default=128,
-                    help='Number of images to process in a batch.')
-
-parser.add_argument('--data_dir', type=str, default='/tmp/cifar10_data',
-                    help='Path to the CIFAR-10 data directory.')
-
-parser.add_argument('--use_fp16', type=bool, default=False,
-                    help='Train the model using fp16.')
-
-FLAGS = parser.parse_args()
+tf.app.flags.DEFINE_integer('batch_size', 128,
+                            """Number of images to process in a batch.""")
+tf.app.flags.DEFINE_string('data_dir', '/tmp/cifar10_data',
+                           """Path to the CIFAR-10 data directory.""")
+tf.app.flags.DEFINE_boolean('use_fp16', False,
+                            """Train the model using fp16.""")
 
 # Global constants describing the CIFAR-10 data set.
 IMAGE_SIZE = cifar10_input.IMAGE_SIZE
@@ -226,6 +222,19 @@ def inference(images):
 
   print('pool{}'.format(s))
   print('\t{} --> {}'.format(conv1.get_shape(), pool1.shape))
+
+  ##Added in code for batch normalization since lrn doesn't work for 3d images
+  norm1 = tf.contrib.layers.batch_norm(
+    pool1,
+    data_format='NHWC',  # Matching the "cnn" tensor which has shape (?, 9, 120, 160, 96).
+    center=True,
+    scale=True,
+    is_training=True,
+   )
+
+  print('norm{}'.format(s))
+  print('\t{} --> {}'.format(pool1.get_shape(), norm1.shape))
+
   
   ##Temporarily uncomment normalization
   # norm1
@@ -238,18 +247,37 @@ def inference(images):
                                          shape=[2,5, 5, 64, 64],
                                          stddev=5e-2,
                                          wd=0.0)
-    conv = tf.nn.conv3d(pool1, kernel, [1, 1, 1, 1, 1], padding='SAME')
+    conv = tf.nn.conv3d(norm1, kernel, [1, 1, 1, 1, 1], padding='SAME')
     biases = _variable_on_cpu('biases', [64], tf.constant_initializer(0.1))
     pre_activation = tf.nn.bias_add(conv, biases)
     conv2 = tf.nn.relu(pre_activation, name=scope.name)
     _activation_summary(conv2)
+    t="2"
+
+  print('conv{}'.format(t))
+  print('\t{} --> {}'.format(norm1.get_shape(), conv2.shape))
+
+  norm2 = tf.contrib.layers.batch_norm(
+    conv2,
+    data_format='NHWC',  # Matching the "cnn" tensor which has shape (?, 9, 120, 160, 96).
+    center=True,
+    scale=True,
+    is_training=True,
+    )
+
+  print('norm{}'.format(t))
+  print('\t{} --> {}'.format(conv2.get_shape(), norm2.shape))
+
 
   # norm2
   # norm2 = tf.nn.lrn(conv2, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75,
   #                   name='norm2')
   # pool2
-  pool2 = tf.nn.max_pool3d(conv2, ksize=[1, 1, 3, 3, 1],
+  pool2 = tf.nn.max_pool3d(norm2, ksize=[1, 1, 3, 3, 1],
                          strides=[1, 1, 2, 2, 1], padding='SAME', name='pool2')
+
+  print('pool{}'.format(t))
+  print('\t{} --> {}'.format(norm2.get_shape(), pool2.shape))
 
   # local3
   with tf.variable_scope('local3') as scope:

@@ -14,20 +14,16 @@
 # ==============================================================================
 
 """Evaluation for CIFAR-10.
-
 Accuracy:
 cifar10_train.py achieves 83.0% accuracy after 100K steps (256 epochs
 of data) as judged by cifar10_eval.py.
-
 Speed:
 On a single Tesla K40, cifar10_train.py processes a single batch of 128 images
 in 0.25-0.35 sec (i.e. 350 - 600 images /sec). The model reaches ~86%
 accuracy after 100K steps in 8 hours of training time.
-
 Usage:
 Please see the tutorial and website for how to download the CIFAR-10
 data set, compile the program and train the model.
-
 http://tensorflow.org/tutorials/deep_cnn/
 """
 from __future__ import absolute_import
@@ -43,30 +39,24 @@ import tensorflow as tf
 
 import cifar10
 
-parser = cifar10.parser
+FLAGS = tf.app.flags.FLAGS
 
-parser.add_argument('--eval_dir', type=str, default='/tmp/cifar10_eval',
-                    help='Directory where to write event logs.')
-
-parser.add_argument('--eval_data', type=str, default='test',
-                    help='Either `test` or `train_eval`.')
-
-parser.add_argument('--checkpoint_dir', type=str, default='/tmp/cifar10_train',
-                    help='Directory where to read model checkpoints.')
-
-parser.add_argument('--eval_interval_secs', type=int, default=60*5,
-                    help='How often to run the eval.')
-
-parser.add_argument('--num_examples', type=int, default=10000,
-                    help='Number of examples to run.')
-
-parser.add_argument('--run_once', type=bool, default=False,
-                    help='Whether to run eval only once.')
+tf.app.flags.DEFINE_string('eval_dir', '/tmp/cifar10_eval',
+                           """Directory where to write event logs.""")
+tf.app.flags.DEFINE_string('eval_data', 'test',
+                           """Either 'test' or 'train_eval'.""")
+tf.app.flags.DEFINE_string('checkpoint_dir', '/tmp/cifar10_train',
+                           """Directory where to read model checkpoints.""")
+tf.app.flags.DEFINE_integer('eval_interval_secs', 60 * 5,
+                            """How often to run the eval.""")
+tf.app.flags.DEFINE_integer('num_examples', 10000,
+                            """Number of examples to run.""")
+tf.app.flags.DEFINE_boolean('run_once', False,
+                         """Whether to run eval only once.""")
 
 
 def eval_once(saver, summary_writer, top_k_op, summary_op):
   """Run Eval once.
-
   Args:
     saver: Saver.
     summary_writer: Summary writer.
@@ -159,5 +149,4 @@ def main(argv=None):  # pylint: disable=unused-argument
 
 
 if __name__ == '__main__':
-  FLAGS = parser.parse_args()
   tf.app.run()

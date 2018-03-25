@@ -271,18 +271,36 @@ def inputs(eval_data, data_dir, batch_size):
                                                          height, width)
 
   # Subtract off the mean and divide by the variance of the pixels.
+
   float_image = tf.image.per_image_standardization(resized_image)
+  first_crop=crop_center(float_image,12,12)
+  print(first_crop.shape)
 
-  # Set the shapes of tensors.
-  float_image.set_shape([height, width, 3])
+  with tf.Session() as sess:
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+      # set up your session here....
+    first_crop_numpy=sess.run(first_crop)
+    first_crop_numpy=sp.misc.imresize(first_crop_numpy,(IMAGE_SIZE,IMAGE_SIZE))
+    first_crop_numpy=tf.convert_to_tensor(first_crop_numpy,dtype=tf.float32)
+
+    final_output=tf.stack([first_crop_numpy, float_image])
+    final_output=tf.reshape(final_output,[IMAGE_SIZE*2,IMAGE_SIZE,3])
+    final_output=tf.reshape(final_output,[-1,IMAGE_SIZE,IMAGE_SIZE,3])
+    
+
+    final_output_numpy=sess.run(final_output)
+    # plt.figure()
+    # plt.imshow(final_output_numpy.astype(np.uint8))
+    # plt.show()
+
   read_input.label.set_shape([1])
-
   # Ensure that the random shuffling has good mixing properties.
   min_fraction_of_examples_in_queue = 0.4
   min_queue_examples = int(num_examples_per_epoch *
                            min_fraction_of_examples_in_queue)
 
   # Generate a batch of images and labels by building up a queue of examples.
-  return _generate_image_and_label_batch(float_image, read_input.label,
+  return _generate_image_and_label_batch(final_output, read_input.label,
                                          min_queue_examples, batch_size,
-                                         shuffle=False)
+                                         shuffle=True)

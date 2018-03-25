@@ -202,7 +202,7 @@ def distorted_inputs(data_dir, batch_size):
     final_output=tf.stack([first_crop_numpy, float_image])
     final_output=tf.reshape(final_output,[IMAGE_SIZE*2,IMAGE_SIZE,3])
     final_output=tf.reshape(final_output,[-1,IMAGE_SIZE,IMAGE_SIZE,3])
-    print(final_output.shape)
+    # print(final_output.shape)
 
     final_output_numpy=sess.run(final_output)
     # plt.figure()

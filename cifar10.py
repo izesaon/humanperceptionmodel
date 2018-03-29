@@ -217,7 +217,7 @@ def inference(images):
     print('\t{} --> {}'.format(images.get_shape(), shape))
 
   # pool1
-  pool1 = tf.nn.max_pool3d(conv1, ksize=[1, 2, 3, 3, 1], strides=[1, 1, 2, 2, 1],
+  pool1 = tf.nn.max_pool3d(conv1, ksize=[1, 2, 3, 3, 1], strides=[1, 2, 2, 2, 1],
                          padding='SAME', name='pool1')
 
   print('pool{}'.format(s))
@@ -274,7 +274,7 @@ def inference(images):
   #                   name='norm2')
   # pool2
   pool2 = tf.nn.max_pool3d(norm2, ksize=[1, 2, 3, 3, 1],
-                         strides=[1, 1, 2, 2, 1], padding='SAME', name='pool2')
+                         strides=[1, 2, 2, 2, 1], padding='SAME', name='pool2')
 
   print('pool{}'.format(t))
   print('\t{} --> {}'.format(norm2.get_shape(), pool2.shape))

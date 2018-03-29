@@ -189,6 +189,7 @@ def distorted_inputs(data_dir, batch_size):
   # Subtract off the mean and divide by the variance of the pixels.
   float_image = tf.image.per_image_standardization(distorted_image)
   first_crop=crop_center(float_image,12,12)
+  second_crop=crop_center(float_image,18,18)
   print(first_crop.shape)
 
   with tf.Session() as sess:
@@ -199,8 +200,13 @@ def distorted_inputs(data_dir, batch_size):
     first_crop_numpy=sp.misc.imresize(first_crop_numpy,(IMAGE_SIZE,IMAGE_SIZE))
     first_crop_numpy=tf.convert_to_tensor(first_crop_numpy,dtype=tf.float32)
 
+    # second_crop_numpy=sess.run(second_crop)
+    # second_crop_numpy=sp.misc.imresize(second_crop_numpy,(IMAGE_SIZE,IMAGE_SIZE))
+    # second_crop_numpy=tf.convert_to_tensor(second_crop_numpy,dtype=tf.float32)
+
     final_output=tf.stack([first_crop_numpy, float_image])
     final_output=tf.reshape(final_output,[IMAGE_SIZE*2,IMAGE_SIZE,3])
+    print(final_output.shape)
     final_output=tf.reshape(final_output,[-1,IMAGE_SIZE,IMAGE_SIZE,3])
     # print(final_output.shape)
 
@@ -274,6 +280,7 @@ def inputs(eval_data, data_dir, batch_size):
 
   float_image = tf.image.per_image_standardization(resized_image)
   first_crop=crop_center(float_image,12,12)
+  second_crop=crop_center(float_image,18,18)
   print(first_crop.shape)
 
   with tf.Session() as sess:
@@ -284,15 +291,16 @@ def inputs(eval_data, data_dir, batch_size):
     first_crop_numpy=sp.misc.imresize(first_crop_numpy,(IMAGE_SIZE,IMAGE_SIZE))
     first_crop_numpy=tf.convert_to_tensor(first_crop_numpy,dtype=tf.float32)
 
+    # second_crop_numpy=sess.run(second_crop)
+    # second_crop_numpy=sp.misc.imresize(second_crop_numpy,(IMAGE_SIZE,IMAGE_SIZE))
+    # second_crop_numpy=tf.convert_to_tensor(second_crop_numpy,dtype=tf.float32)
+
     final_output=tf.stack([first_crop_numpy, float_image])
     final_output=tf.reshape(final_output,[IMAGE_SIZE*2,IMAGE_SIZE,3])
+    # print(final_output.shape)
     final_output=tf.reshape(final_output,[-1,IMAGE_SIZE,IMAGE_SIZE,3])
-    
+    # print(final_output.shape)
 
-    final_output_numpy=sess.run(final_output)
-    # plt.figure()
-    # plt.imshow(final_output_numpy.astype(np.uint8))
-    # plt.show()
 
   read_input.label.set_shape([1])
   # Ensure that the random shuffling has good mixing properties.

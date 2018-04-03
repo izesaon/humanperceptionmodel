@@ -63,7 +63,7 @@ def train():
       images, labels = cifar10.distorted_inputs()
 
     # Build a Graph that computes the logits predictions from the
-    # inference model.
+    # inference model.b
     logits = cifar10.inference(images)
 
     # Calculate loss.

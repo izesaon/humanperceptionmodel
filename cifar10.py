@@ -218,7 +218,7 @@ def inference(images):
     print('\t{} --> {}'.format(images.get_shape(), shape))
 
   # pool1
-  pool1 = tf.nn.max_pool3d(conv1, ksize=[1, 2, 3, 3, 1], strides=[1, 1, 2, 2, 1],
+  pool1 = tf.nn.max_pool3d(conv1, ksize=[1, 2, 3, 3, 1], strides=[1, 2, 2, 2, 1],
                          padding='SAME', name='pool1')
 
   print('pool{}'.format(s))
@@ -275,7 +275,7 @@ def inference(images):
   #                   name='norm2')
   # pool2
   pool2 = tf.nn.max_pool3d(norm2, ksize=[1, 2, 3, 3, 1],
-                         strides=[1, 1, 2, 2, 1], padding='SAME', name='pool2')
+                         strides=[1, 2, 2, 2, 1], padding='SAME', name='pool2')
 
   print('pool{}'.format(t))
   print('\t{} --> {}'.format(norm2.get_shape(), pool2.shape))
@@ -308,7 +308,7 @@ def inference(images):
   print('\t{} --> {}'.format(conv3.get_shape(), norm3.shape))
 
   pool3 = tf.nn.max_pool3d(norm3, ksize=[1, 2, 3, 3, 1],
-                         strides=[1, 1, 2, 2, 1], padding='SAME', name='pool3')
+                         strides=[1, 2, 2, 2, 1], padding='SAME', name='pool3')
 
   print('pool{}'.format(u))
   print('\t{} --> {}'.format(norm3.get_shape(), pool3.shape))
@@ -341,50 +341,16 @@ def inference(images):
   print('\t{} --> {}'.format(conv4.get_shape(), norm4.shape))
 
   pool4 = tf.nn.max_pool3d(norm4, ksize=[1, 2, 3, 3, 1],
-                         strides=[1, 1, 2, 2, 1], padding='SAME', name='pool4')
+                         strides=[1, 2, 2, 2, 1], padding='SAME', name='pool4')
 
   print('pool{}'.format(v))
   print('\t{} --> {}'.format(norm4.get_shape(), pool4.shape))
-
-  with tf.variable_scope('conv5') as scope:
-    kernel = _variable_with_weight_decay('weights',
-                                         shape=[2 ,5 , 5, 64, 64],
-                                         stddev=5e-2,
-                                         wd=0.0)
-    conv = tf.nn.conv3d(pool4, kernel, [1, 1, 1, 1, 1], padding='SAME')
-    biases = _variable_on_cpu('biases', [64], tf.constant_initializer(0.1))
-    pre_activation = tf.nn.bias_add(conv, biases)
-    conv5 = tf.nn.relu(pre_activation, name=scope.name)
-    _activation_summary(conv5)
-    
-    q="5"
-
-  print('conv{}'.format(q))
-  print('\t{} --> {}'.format(pool4.get_shape(), conv5.shape))
-
-  norm5 = tf.contrib.layers.batch_norm(
-    conv4,
-    data_format='NHWC',  # Matching the "cnn" tensor which has shape (?, 9, 120, 160, 96).
-    center=True,
-    scale=True,
-    is_training=True,
-    )
-
-  print('norm{}'.format(q))
-  print('\t{} --> {}'.format(conv5.get_shape(), norm5.shape))
-
-  pool5 = tf.nn.max_pool3d(norm5, ksize=[1, 2, 3, 3, 1],
-                         strides=[1, 1, 2, 2, 1], padding='SAME', name='pool4')
-
-  print('pool{}'.format(q))
-  print('\t{} --> {}'.format(norm5.get_shape(), pool5.shape))
-
 
 
   # local3
   with tf.variable_scope('local3') as scope:
     # Move everything into depth so we can perform a single matrix multiply.
-    reshape = tf.reshape(pool5, [FLAGS.batch_size, -1])
+    reshape = tf.reshape(pool4, [FLAGS.batch_size, -1])
     dim = reshape.get_shape()[1].value
     weights = _variable_with_weight_decay('weights', shape=[dim, 384],
                                           stddev=0.04, wd=0.004)

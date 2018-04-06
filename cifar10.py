@@ -218,7 +218,7 @@ def inference(images):
     print('\t{} --> {}'.format(images.get_shape(), shape))
 
   # pool1
-  pool1 = tf.nn.max_pool3d(conv1, ksize=[1, 2, 3, 3, 1], strides=[1, 1, 2, 2, 1],
+  pool1 = tf.nn.max_pool3d(conv1, ksize=[1, 1, 3, 3, 1], strides=[1, 1, 2, 2, 1],
                          padding='SAME', name='pool1')
 
   print('pool{}'.format(s))
@@ -274,7 +274,7 @@ def inference(images):
   # norm2 = tf.nn.lrn(conv2, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75,
   #                   name='norm2')
   # pool2
-  pool2 = tf.nn.max_pool3d(norm2, ksize=[1, 2, 3, 3, 1],
+  pool2 = tf.nn.max_pool3d(norm2, ksize=[1, 1, 3, 3, 1],
                          strides=[1, 1, 2, 2, 1], padding='SAME', name='pool2')
 
   print('pool{}'.format(t))
@@ -307,7 +307,7 @@ def inference(images):
   print('norm{}'.format(u))
   print('\t{} --> {}'.format(conv3.get_shape(), norm3.shape))
 
-  pool3 = tf.nn.max_pool3d(norm3, ksize=[1, 2, 3, 3, 1],
+  pool3 = tf.nn.max_pool3d(norm3, ksize=[1, 1, 3, 3, 1],
                          strides=[1, 1, 2, 2, 1], padding='SAME', name='pool3')
 
   print('pool{}'.format(u))
@@ -340,7 +340,7 @@ def inference(images):
   print('norm{}'.format(u))
   print('\t{} --> {}'.format(conv4.get_shape(), norm4.shape))
 
-  pool4 = tf.nn.max_pool3d(norm4, ksize=[1, 2, 3, 3, 1],
+  pool4 = tf.nn.max_pool3d(norm4, ksize=[1, 1, 3, 3, 1],
                          strides=[1, 1, 2, 2, 1], padding='SAME', name='pool4')
 
   print('pool{}'.format(v))

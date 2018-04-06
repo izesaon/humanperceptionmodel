@@ -101,6 +101,8 @@ def eval_once(saver, summary_writer, top_k_op, summary_op):
       summary.ParseFromString(sess.run(summary_op))
       summary.value.add(tag='Precision @ 1', simple_value=precision)
       summary_writer.add_summary(summary, global_step)
+
+
     except Exception as e:  # pylint: disable=broad-except
       coord.request_stop(e)
 
@@ -146,6 +148,7 @@ def main(argv=None):  # pylint: disable=unused-argument
     tf.gfile.DeleteRecursively(FLAGS.eval_dir)
   tf.gfile.MakeDirs(FLAGS.eval_dir)
   evaluate()
+  print("end")
 
 
 if __name__ == '__main__':

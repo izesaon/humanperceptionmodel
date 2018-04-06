@@ -204,7 +204,7 @@ def inference(images):
   # conv1
   with tf.variable_scope('conv1') as scope:
     kernel = _variable_with_weight_decay('weights',
-                                         shape=[2, 5, 5, 3, 64],
+                                         shape=[1, 5, 5, 3, 64],
                                          stddev=5e-2,
                                          wd=0.0)
     conv = tf.nn.conv3d(images, kernel, [1, 1, 1, 1, 1], padding='SAME')
@@ -218,7 +218,7 @@ def inference(images):
     print('\t{} --> {}'.format(images.get_shape(), shape))
 
   # pool1
-  pool1 = tf.nn.max_pool3d(conv1, ksize=[1, 2, 3, 3, 1], strides=[1, 2, 2, 2, 1],
+  pool1 = tf.nn.max_pool3d(conv1, ksize=[1, 2, 3, 3, 1], strides=[1, 1, 2, 2, 1],
                          padding='SAME', name='pool1')
 
   print('pool{}'.format(s))
@@ -245,7 +245,7 @@ def inference(images):
   # conv2
   with tf.variable_scope('conv2') as scope:
     kernel = _variable_with_weight_decay('weights',
-                                         shape=[2,5, 5, 64, 64],
+                                         shape=[1, 5, 5, 64, 64],
                                          stddev=5e-2,
                                          wd=0.0)
     conv = tf.nn.conv3d(norm1, kernel, [1, 1, 1, 1, 1], padding='SAME')
@@ -275,14 +275,14 @@ def inference(images):
   #                   name='norm2')
   # pool2
   pool2 = tf.nn.max_pool3d(norm2, ksize=[1, 2, 3, 3, 1],
-                         strides=[1, 2, 2, 2, 1], padding='SAME', name='pool2')
+                         strides=[1, 1, 2, 2, 1], padding='SAME', name='pool2')
 
   print('pool{}'.format(t))
   print('\t{} --> {}'.format(norm2.get_shape(), pool2.shape))
 
   with tf.variable_scope('conv3') as scope:
     kernel = _variable_with_weight_decay('weights',
-                                         shape=[2 ,5 , 5, 64, 64],
+                                         shape=[1 ,5 , 5, 64, 64],
                                          stddev=5e-2,
                                          wd=0.0)
     conv = tf.nn.conv3d(pool2, kernel, [1, 1, 1, 1, 1], padding='SAME')
@@ -308,14 +308,14 @@ def inference(images):
   print('\t{} --> {}'.format(conv3.get_shape(), norm3.shape))
 
   pool3 = tf.nn.max_pool3d(norm3, ksize=[1, 2, 3, 3, 1],
-                         strides=[1, 2, 2, 2, 1], padding='SAME', name='pool3')
+                         strides=[1, 1, 2, 2, 1], padding='SAME', name='pool3')
 
   print('pool{}'.format(u))
   print('\t{} --> {}'.format(norm3.get_shape(), pool3.shape))
 
   with tf.variable_scope('conv4') as scope:
     kernel = _variable_with_weight_decay('weights',
-                                         shape=[2 ,5 , 5, 64, 64],
+                                         shape=[1 ,5 , 5, 64, 64],
                                          stddev=5e-2,
                                          wd=0.0)
     conv = tf.nn.conv3d(pool3, kernel, [1, 1, 1, 1, 1], padding='SAME')
@@ -341,7 +341,7 @@ def inference(images):
   print('\t{} --> {}'.format(conv4.get_shape(), norm4.shape))
 
   pool4 = tf.nn.max_pool3d(norm4, ksize=[1, 2, 3, 3, 1],
-                         strides=[1, 2, 2, 2, 1], padding='SAME', name='pool4')
+                         strides=[1, 1, 2, 2, 1], padding='SAME', name='pool4')
 
   print('pool{}'.format(v))
   print('\t{} --> {}'.format(norm4.get_shape(), pool4.shape))

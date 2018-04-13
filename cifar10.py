@@ -14,19 +14,14 @@
 # ==============================================================================
 
 """Builds the CIFAR-10 network.
-
 Summary of available functions:
-
  # Compute input images and labels for training. If you would like to run
  # evaluations, use inputs() instead.
  inputs, labels = distorted_inputs()
-
  # Compute inference on the model inputs to make a prediction.
  predictions = inference(inputs)
-
  # Compute the total loss of the prediction with respect to the labels.
  loss = loss(predictions, labels)
-
  # Create a graph to run one step of training with respect to the loss.
  train_op = train(loss, global_step)
 """
@@ -79,10 +74,8 @@ DATA_URL = 'http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz'
 
 def _activation_summary(x):
   """Helper to create summaries for activations.
-
   Creates a summary that provides a histogram of activations.
   Creates a summary that measures the sparsity of activations.
-
   Args:
     x: Tensor
   Returns:
@@ -98,12 +91,10 @@ def _activation_summary(x):
 
 def _variable_on_cpu(name, shape, initializer):
   """Helper to create a Variable stored on CPU memory.
-
   Args:
     name: name of the variable
     shape: list of ints
     initializer: initializer for Variable
-
   Returns:
     Variable Tensor
   """
@@ -115,17 +106,14 @@ def _variable_on_cpu(name, shape, initializer):
 
 def _variable_with_weight_decay(name, shape, stddev, wd):
   """Helper to create an initialized Variable with weight decay.
-
   Note that the Variable is initialized with a truncated normal distribution.
   A weight decay is added only if one is specified.
-
   Args:
     name: name of the variable
     shape: list of ints
     stddev: standard deviation of a truncated Gaussian
     wd: add L2Loss weight decay multiplied by this float. If None, weight
         decay is not added for this Variable.
-
   Returns:
     Variable Tensor
   """
@@ -142,11 +130,9 @@ def _variable_with_weight_decay(name, shape, stddev, wd):
 
 def distorted_inputs():
   """Construct distorted input for CIFAR training using the Reader ops.
-
   Returns:
     images: Images. 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3] size.
     labels: Labels. 1D tensor of [batch_size] size.
-
   Raises:
     ValueError: If no data_dir
   """
@@ -163,14 +149,11 @@ def distorted_inputs():
 
 def inputs(eval_data):
   """Construct input for CIFAR evaluation using the Reader ops.
-
   Args:
     eval_data: bool, indicating if one should use the train or eval data set.
-
   Returns:
     images: Images. 4D tensor of [batch_size, IMAGE_SIZE, IMAGE_SIZE, 3] size.
     labels: Labels. 1D tensor of [batch_size] size.
-
   Raises:
     ValueError: If no data_dir
   """
@@ -189,10 +172,8 @@ def inputs(eval_data):
 def inference(images):
   print(images.shape)
   """Build the CIFAR-10 model.
-
   Args:
     images: Images returned from distorted_inputs() or inputs().
-
   Returns:
     Logits.
   """
@@ -280,77 +261,110 @@ def inference(images):
   print('pool{}'.format(t))
   print('\t{} --> {}'.format(norm2.get_shape(), pool2.shape))
 
-  # with tf.variable_scope('conv3') as scope:
-  #   kernel = _variable_with_weight_decay('weights',
-  #                                        shape=[1 ,5 , 5, 64, 64],
-  #                                        stddev=5e-2,
-  #                                        wd=0.0)
-  #   conv = tf.nn.conv3d(pool2, kernel, [1, 1, 1, 1, 1], padding='SAME')
-  #   biases = _variable_on_cpu('biases', [64], tf.constant_initializer(0.1))
-  #   pre_activation = tf.nn.bias_add(conv, biases)
-  #   conv3 = tf.nn.relu(pre_activation, name=scope.name)
-  #   _activation_summary(conv3)
+  with tf.variable_scope('conv3') as scope:
+    kernel = _variable_with_weight_decay('weights',
+                                         shape=[1 ,5 , 5, 64, 64],
+                                         stddev=5e-2,
+                                         wd=0.0)
+    conv = tf.nn.conv3d(pool2, kernel, [1, 1, 1, 1, 1], padding='SAME')
+    biases = _variable_on_cpu('biases', [64], tf.constant_initializer(0.1))
+    pre_activation = tf.nn.bias_add(conv, biases)
+    conv3 = tf.nn.relu(pre_activation, name=scope.name)
+    _activation_summary(conv3)
     
-  #   u="3"
+    u="3"
 
-  # print('conv{}'.format(t))
-  # print('\t{} --> {}'.format(pool2.get_shape(), conv3.shape))
+  print('conv{}'.format(t))
+  print('\t{} --> {}'.format(pool2.get_shape(), conv3.shape))
 
-  # norm3 = tf.contrib.layers.batch_norm(
-  #   conv3,
-  #   data_format='NHWC',  # Matching the "cnn" tensor which has shape (?, 9, 120, 160, 96).
-  #   center=True,
-  #   scale=True,
-  #   is_training=True,
-  #   )
+  norm3 = tf.contrib.layers.batch_norm(
+    conv3,
+    data_format='NHWC',  # Matching the "cnn" tensor which has shape (?, 9, 120, 160, 96).
+    center=True,
+    scale=True,
+    is_training=True,
+    )
 
-  # print('norm{}'.format(u))
-  # print('\t{} --> {}'.format(conv3.get_shape(), norm3.shape))
+  print('norm{}'.format(u))
+  print('\t{} --> {}'.format(conv3.get_shape(), norm3.shape))
 
-  # pool3 = tf.nn.max_pool3d(norm3, ksize=[1, 1, 3, 3, 1],
-  #                        strides=[1, 1, 2, 2, 1], padding='SAME', name='pool3')
+  pool3 = tf.nn.max_pool3d(norm3, ksize=[1, 2, 3, 3, 1],
+                         strides=[1, 1, 2, 2, 1], padding='SAME', name='pool3')
 
-  # print('pool{}'.format(u))
-  # print('\t{} --> {}'.format(norm3.get_shape(), pool3.shape))
+  print('pool{}'.format(u))
+  print('\t{} --> {}'.format(norm3.get_shape(), pool3.shape))
 
-  # with tf.variable_scope('conv4') as scope:
-  #   kernel = _variable_with_weight_decay('weights',
-  #                                        shape=[1 ,5 , 5, 64, 64],
-  #                                        stddev=5e-2,
-  #                                        wd=0.0)
-  #   conv = tf.nn.conv3d(pool3, kernel, [1, 1, 1, 1, 1], padding='SAME')
-  #   biases = _variable_on_cpu('biases', [64], tf.constant_initializer(0.1))
-  #   pre_activation = tf.nn.bias_add(conv, biases)
-  #   conv4 = tf.nn.relu(pre_activation, name=scope.name)
-  #   _activation_summary(conv4)
+  with tf.variable_scope('conv4') as scope:
+    kernel = _variable_with_weight_decay('weights',
+                                         shape=[1 ,5 , 5, 64, 64],
+                                         stddev=5e-2,
+                                         wd=0.0)
+    conv = tf.nn.conv3d(pool3, kernel, [1, 1, 1, 1, 1], padding='SAME')
+    biases = _variable_on_cpu('biases', [64], tf.constant_initializer(0.1))
+    pre_activation = tf.nn.bias_add(conv, biases)
+    conv4 = tf.nn.relu(pre_activation, name=scope.name)
+    _activation_summary(conv4)
     
-  #   v="4"
+    v="4"
 
-  # print('conv{}'.format(v))
-  # print('\t{} --> {}'.format(pool3.get_shape(), conv4.shape))
+  print('conv{}'.format(v))
+  print('\t{} --> {}'.format(pool3.get_shape(), conv4.shape))
 
-  # norm4 = tf.contrib.layers.batch_norm(
-  #   conv4,
-  #   data_format='NHWC',  # Matching the "cnn" tensor which has shape (?, 9, 120, 160, 96).
-  #   center=True,
-  #   scale=True,
-  #   is_training=True,
-  #   )
+  norm4 = tf.contrib.layers.batch_norm(
+    conv4,
+    data_format='NHWC',  # Matching the "cnn" tensor which has shape (?, 9, 120, 160, 96).
+    center=True,
+    scale=True,
+    is_training=True,
+    )
 
-  # print('norm{}'.format(u))
-  # print('\t{} --> {}'.format(conv4.get_shape(), norm4.shape))
+  print('norm{}'.format(u))
+  print('\t{} --> {}'.format(conv4.get_shape(), norm4.shape))
 
-  # pool4 = tf.nn.max_pool3d(norm4, ksize=[1, 1, 3, 3, 1],
-  #                        strides=[1, 1, 2, 2, 1], padding='SAME', name='pool4')
+  pool4 = tf.nn.max_pool3d(norm4, ksize=[1, 2, 3, 3, 1],
+                         strides=[1, 1, 2, 2, 1], padding='SAME', name='pool4')
 
-  # print('pool{}'.format(v))
-  # print('\t{} --> {}'.format(norm4.get_shape(), pool4.shape))
+  print('pool{}'.format(v))
+  print('\t{} --> {}'.format(norm4.get_shape(), pool4.shape))
+
+  with tf.variable_scope('conv5') as scope:
+    kernel = _variable_with_weight_decay('weights',
+                                         shape=[1 ,5 , 5, 64, 64],
+                                         stddev=5e-2,
+                                         wd=0.0)
+    conv = tf.nn.conv3d(pool4, kernel, [1, 1, 1, 1, 1], padding='SAME')
+    biases = _variable_on_cpu('biases', [64], tf.constant_initializer(0.1))
+    pre_activation = tf.nn.bias_add(conv, biases)
+    conv5 = tf.nn.relu(pre_activation, name=scope.name)
+    _activation_summary(conv5)
+    
+  q="5"
+
+  print('conv{}'.format(q))
+  print('\t{} --> {}'.format(pool4.get_shape(), conv5.shape))
+
+  norm5 = tf.contrib.layers.batch_norm(
+    conv4,
+    data_format='NHWC',  # Matching the "cnn" tensor which has shape (?, 9, 120, 160, 96).
+    center=True,
+    scale=True,
+    is_training=True,
+    )
+
+  print('norm{}'.format(q))
+  print('\t{} --> {}'.format(conv5.get_shape(), norm5.shape))
+
+  pool5 = tf.nn.max_pool3d(norm5, ksize=[1, 2, 3, 3, 1],
+                         strides=[1, 1, 2, 2, 1], padding='SAME', name='pool4')
+
+  print('pool{}'.format(q))
+  print('\t{} --> {}'.format(norm5.get_shape(), pool5.shape))
 
 
   # local3
   with tf.variable_scope('local3') as scope:
     # Move everything into depth so we can perform a single matrix multiply.
-    reshape = tf.reshape(pool2, [FLAGS.batch_size, -1])
+    reshape = tf.reshape(pool5, [FLAGS.batch_size, -1])
     dim = reshape.get_shape()[1].value
     weights = _variable_with_weight_decay('weights', shape=[dim, 384],
                                           stddev=0.04, wd=0.004)
@@ -383,13 +397,11 @@ def inference(images):
 
 def loss(logits, labels):
   """Add L2Loss to all the trainable variables.
-
   Add summary for "Loss" and "Loss/avg".
   Args:
     logits: Logits from inference().
     labels: Labels from distorted_inputs or inputs(). 1-D tensor
             of shape [batch_size]
-
   Returns:
     Loss tensor of type float.
   """
@@ -407,10 +419,8 @@ def loss(logits, labels):
 
 def _add_loss_summaries(total_loss):
   """Add summaries for losses in CIFAR-10 model.
-
   Generates moving average for all losses and associated summaries for
   visualizing the performance of the network.
-
   Args:
     total_loss: Total loss from loss().
   Returns:
@@ -434,10 +444,8 @@ def _add_loss_summaries(total_loss):
 
 def train(total_loss, global_step):
   """Train CIFAR-10 model.
-
   Create an optimizer and apply to all trainable variables. Add moving
   average for all trainable variables.
-
   Args:
     total_loss: Total loss from loss().
     global_step: Integer Variable counting the number of training steps

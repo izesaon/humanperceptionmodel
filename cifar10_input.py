@@ -195,6 +195,8 @@ def distorted_inputs(data_dir, batch_size):
 
   #without padding
   first_crop=crop_center(distorted_image,32,32)
+  second_crop=crop_center(distorted_image,24,24)
+  third_crop=crop_center(distorted_image,16,16)
 
   # with padding
   first_crop_with_padding=crop_center(distorted_image,20,20)
@@ -219,6 +221,8 @@ def distorted_inputs(data_dir, batch_size):
       # final_output=sess.run(first_crop_numpy)
       # plt.imshow(final_output.astype(np.uint8))
       # plt.show()
+      final_output=tf.stack([first_crop_numpy, first_crop_numpy, first_crop_numpy])
+      final_output=tf.reshape(final_output,[IMAGE_SIZE*3,IMAGE_SIZE,3])
       
     else:
       print("Label Others")
@@ -227,15 +231,27 @@ def distorted_inputs(data_dir, batch_size):
       first_crop_numpy=tf.convert_to_tensor(first_crop_numpy,dtype=tf.float32)
       first_crop_numpy=tf.image.per_image_standardization(first_crop_numpy)
 
-    final_output=tf.stack([first_crop_numpy, first_crop_numpy, first_crop_numpy])
-    final_output=tf.reshape(final_output,[IMAGE_SIZE*3,IMAGE_SIZE,3])
-    # final_output=tf.reshape(final_output,[-1,IMAGE_SIZE,IMAGE_SIZE,3])
+      second_crop_numpy=sess.run(second_crop)
+      second_crop_numpy=sp.misc.imresize(second_crop_numpy,(IMAGE_SIZE,IMAGE_SIZE))
+      second_crop_numpy=tf.convert_to_tensor(second_crop_numpy,dtype=tf.float32)
+      second_crop_numpy=tf.image.per_image_standardization(second_crop_numpy)
+      
+      third_crop_numpy=sess.run(third_crop)
+      third_crop_numpy=sp.misc.imresize(third_crop_numpy,(IMAGE_SIZE,IMAGE_SIZE))
+      third_crop_numpy=tf.convert_to_tensor(third_crop_numpy,dtype=tf.float32)
+      third_crop_numpy=tf.image.per_image_standardization(third_crop_numpy)
 
-    final_output_numpy=sess.run(final_output)
-    print(final_output.shape)
-    plt.figure()
-    plt.imshow(final_output_numpy.astype(np.uint8))
-    plt.show()
+      final_output=tf.stack([first_crop_numpy, second_crop_numpy, third_crop_numpy])
+      final_output=tf.reshape(final_output,[IMAGE_SIZE*3,IMAGE_SIZE,3])
+
+    
+    final_output=tf.reshape(final_output,[-1,IMAGE_SIZE,IMAGE_SIZE,3])
+
+    # final_output_numpy=sess.run(final_output)
+    # print(final_output.shape)
+    # plt.figure()
+    # plt.imshow(final_output_numpy.astype(np.uint8))
+    # plt.show()
 
   # Set the shapes of tensors.
 
@@ -300,8 +316,8 @@ def inputs(eval_data, data_dir, batch_size):
   # Subtract off the mean and divide by the variance of the pixels.
 
   float_image = tf.image.per_image_standardization(resized_image)
-  first_crop=crop_center(float_image,32,32)
-
+  first_crop=crop_center(float_image,20,20)
+  first_crop=tf.image.per_image_standardization(first_crop)
   read_input.label.set_shape([1])
   label=read_input.label
 
@@ -309,9 +325,10 @@ def inputs(eval_data, data_dir, batch_size):
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
       # set up your session here....
+    pad = 6 #pixels
     first_crop_numpy=sess.run(first_crop)
+    first_crop_numpy = np.pad(first_crop_numpy, ((pad,pad),(pad,pad),(0,0)), 'constant')
     first_crop_numpy=tf.convert_to_tensor(first_crop_numpy,dtype=tf.float32)
-    first_crop_numpy=tf.image.per_image_standardization(first_crop_numpy)
 
     final_output=tf.stack([first_crop_numpy, first_crop_numpy, first_crop_numpy])
     final_output=tf.reshape(final_output,[IMAGE_SIZE*3,IMAGE_SIZE,3])

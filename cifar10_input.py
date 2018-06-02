@@ -95,7 +95,6 @@ def read_cifar10(filename_queue):
       [result.depth, result.height, result.width])
   # Convert from [depth, height, width] to [height, width, depth].
   result.uint8image = tf.transpose(depth_major, [1, 2, 0])
-  print("Hi")
 
   return result
 
@@ -169,83 +168,53 @@ def distorted_inputs(data_dir, batch_size):
   distorted_image = tf.random_crop(reshaped_image, [height, width, 3])
 
   # Randomly flip the image horizontally.
-  # distorted_image = tf.image.random_flip_left_right(distorted_image)
+  distorted_image = tf.image.random_flip_left_right(distorted_image)
 
   # Because these operations are not commutative, consider randomizing
   # the order their operation.
   # NOTE: since per_image_standardization zeros the mean and makes
   # the stddev unit, this likely has no effect see tensorflow#1458.
-  # distorted_image = tf.image.random_brightness(distorted_image,
-  #                                              max_delta=63)
-  # distorted_image = tf.image.random_contrast(distorted_image,
-  #                                            lower=0.2, upper=1.8)
+  distorted_image = tf.image.random_brightness(distorted_image,
+                                               max_delta=63)
+  distorted_image = tf.image.random_contrast(distorted_image,
+                                             lower=0.2, upper=1.8)
 
   # Subtract off the mean and divide by the variance of the pixels.
-  # float_image = tf.image.per_image_standardization(distorted_image)
-  float_image=distorted_image
-  # float_image=tf.image.per_image_standardization(distorted_image)
+  float_image = tf.image.per_image_standardization(distorted_image)
 
-  first_crop=crop_center(distorted_image,32,32)
-  second_crop=crop_center(distorted_image,28,28)
-  third_crop=crop_center(distorted_image,24,24)
-  fourth_crop=crop_center(distorted_image,20,20)
+  first_crop=crop_center(distorted_image,28,28)
+  second_crop=crop_center(distorted_image,24,24)
+  third_crop=crop_center(distorted_image,20,20)
 
   with tf.Session() as sess:
-    # print("Hello")
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
-
-    float_image_numpy=sess.run(float_image)
-    # print(float_image_numpy)
-    # print("FLOAT")
-    float_image_numpy=sp.misc.imresize(float_image_numpy,(IMAGE_SIZE,IMAGE_SIZE))
-    float_image_numpy=np.divide(float_image_numpy,255)
-    # print(float_image_numpy)
-    float_image_numpy=tf.convert_to_tensor(float_image_numpy,dtype=tf.float32)
-    # float_image_numpy=sp.misc.imresize(float_image_numpy,(IMAGE_SIZE,IMAGE_SIZE))
+      # set up your session here....
+    first_crop_numpy=sess.run(first_crop)
+    first_crop_numpy=sp.misc.imresize(first_crop_numpy,(IMAGE_SIZE,IMAGE_SIZE))
+    first_crop_numpy=tf.convert_to_tensor(first_crop_numpy,dtype=tf.float32)
+    first_crop_numpy=tf.image.per_image_standardization(first_crop_numpy)
 
     second_crop_numpy=sess.run(second_crop)
-    # print(second_crop_numpy)
     second_crop_numpy=sp.misc.imresize(second_crop_numpy,(IMAGE_SIZE,IMAGE_SIZE))
-    second_crop_numpy=np.divide(second_crop_numpy,255)
-    # print("SECOND")
-    # print(second_crop_numpy)
-    # print(np.amax(second_crop_numpy,axis=0))
-    # second_crop_numpy=np.divide(second_crop_numpy,255)
     second_crop_numpy=tf.convert_to_tensor(second_crop_numpy,dtype=tf.float32)
-    # second_crop_numpy=tf.image.per_image_standardization(second_crop_numpy)
+    second_crop_numpy=tf.image.per_image_standardization(second_crop_numpy)
 
     third_crop_numpy=sess.run(third_crop)
     third_crop_numpy=sp.misc.imresize(third_crop_numpy,(IMAGE_SIZE,IMAGE_SIZE))
-    third_crop_numpy=np.divide(third_crop_numpy,255)
-    # print("THIRD")
-    # print(third_crop_numpy)
-    # print(np.amax(third_crop_numpy,axis=0))
     third_crop_numpy=tf.convert_to_tensor(third_crop_numpy,dtype=tf.float32)
-    # third_crop_numpy=tf.image.per_image_standardization(third_crop_numpy)
+    third_crop_numpy=tf.image.per_image_standardization(third_crop_numpy)
 
-    fourth_crop_numpy=sess.run(fourth_crop)
-    fourth_crop_numpy=sp.misc.imresize(fourth_crop_numpy,(IMAGE_SIZE,IMAGE_SIZE))
-    fourth_crop_numpy=np.divide(fourth_crop_numpy,255)
-    # third_crop_numpy=np.divide(third_crop_numpy,255)
-    # print("FOURTH")
-    # print(fourth_crop_numpy)
-    # print(np.amax(fourth_crop_numpy,axis=0))
-    fourth_crop_numpy=tf.convert_to_tensor(fourth_crop_numpy,dtype=tf.float32)
-    # fourth_crop_numpy=tf.image.per_image_standardization(fourth_crop_numpy)
-
-    final_output=tf.stack([float_image_numpy, second_crop_numpy,third_crop_numpy, fourth_crop_numpy])
+    final_output=tf.stack([third_crop_numpy, second_crop_numpy, first_crop_numpy, float_image])
     final_output=tf.reshape(final_output,[IMAGE_SIZE*4,IMAGE_SIZE,3])
-
-    final_output_numpy=sess.run(final_output)
-    # print(final_output_numpy)
-    plt.figure()
-    plt.imshow(final_output_numpy.astype(np.float32))
-    plt.show()
-
     final_output=tf.reshape(final_output,[-1,IMAGE_SIZE,IMAGE_SIZE,3])
-    coord.request_stop()
-    coord.join(threads)
+
+
+    # final_output_numpy=sess.run(final_output)
+    # print(final_output.shape)
+    # plt.figure()
+    # plt.imshow(final_output_numpy.astype(np.uint8))
+    # plt.show()
 
   # Set the shapes of tensors.
 
@@ -307,64 +276,44 @@ def inputs(eval_data, data_dir, batch_size):
                                                          height, width)
 
   # Subtract off the mean and divide by the variance of the pixels.
-  # float_image=resized_image
+
   # float_image = tf.image.per_image_standardization(resized_image)
-  float_image=resized_image
-  first_crop=crop_center(resized_image,32,32)
-  second_crop=crop_center(resized_image,28,28)
-  third_crop=crop_center(resized_image,24,24)
-  fourth_crop=crop_center(resized_image,20,20)
+  
+  crop_by_20=crop_center(resized_image,20,20)
+  crop_by_20=tf.image.resize_image_with_crop_or_pad(crop_by_20,
+                                                         height, width)
+
+  first_crop=crop_center(crop_by_20,28,28)
+  second_crop=crop_center(crop_by_20,24,24)
+  third_crop=crop_center(crop_by_20,20,20)
 
   with tf.Session() as sess:
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
-
-    float_image_numpy=sess.run(float_image)
-    print(float_image_numpy)
-    print("FLOAT")
-    float_image_numpy=np.divide(float_image_numpy,255)
-    print(float_image_numpy)
-    float_image_numpy=tf.convert_to_tensor(float_image_numpy,dtype=tf.float32)
-    # float_image_numpy=sp.misc.imresize(float_image_numpy,(IMAGE_SIZE,IMAGE_SIZE))
+      # set up your session here....
+    first_crop_numpy=sess.run(first_crop)
+    first_crop_numpy=sp.misc.imresize(first_crop_numpy,(IMAGE_SIZE,IMAGE_SIZE))
+    first_crop_numpy=tf.convert_to_tensor(first_crop_numpy,dtype=tf.float32)
+    # first_crop_numpy=tf.image.per_image_standardization(first_crop_numpy)
 
     second_crop_numpy=sess.run(second_crop)
-    print(second_crop_numpy)
     second_crop_numpy=sp.misc.imresize(second_crop_numpy,(IMAGE_SIZE,IMAGE_SIZE))
-    second_crop_numpy=np.divide(second_crop_numpy,255)
-    print("SECOND")
-    print(second_crop_numpy)
-    # print(np.amax(second_crop_numpy,axis=0))
-    # second_crop_numpy=np.divide(second_crop_numpy,255)
     second_crop_numpy=tf.convert_to_tensor(second_crop_numpy,dtype=tf.float32)
     # second_crop_numpy=tf.image.per_image_standardization(second_crop_numpy)
 
     third_crop_numpy=sess.run(third_crop)
     third_crop_numpy=sp.misc.imresize(third_crop_numpy,(IMAGE_SIZE,IMAGE_SIZE))
-    third_crop_numpy=np.divide(third_crop_numpy,255)
-    # print("THIRD")
-    # print(third_crop_numpy)
-    # print(np.amax(third_crop_numpy,axis=0))
     third_crop_numpy=tf.convert_to_tensor(third_crop_numpy,dtype=tf.float32)
     # third_crop_numpy=tf.image.per_image_standardization(third_crop_numpy)
 
-    fourth_crop_numpy=sess.run(fourth_crop)
-    fourth_crop_numpy=sp.misc.imresize(fourth_crop_numpy,(IMAGE_SIZE,IMAGE_SIZE))
-    fourth_crop_numpy=np.divide(fourth_crop_numpy,255)
-    # third_crop_numpy=np.divide(third_crop_numpy,255)
-    # print("FOURTH")
-    # print(fourth_crop_numpy)
-    # print(np.amax(fourth_crop_numpy,axis=0))
-    fourth_crop_numpy=tf.convert_to_tensor(fourth_crop_numpy,dtype=tf.float32)
-    # fourth_crop_numpy=tf.image.per_image_standardization(fourth_crop_numpy)
-
-    final_output=tf.stack([float_image_numpy, second_crop_numpy,third_crop_numpy, fourth_crop_numpy])
+    final_output=tf.stack([third_crop_numpy, second_crop_numpy, first_crop_numpy, crop_by_20])
     final_output=tf.reshape(final_output,[IMAGE_SIZE*4,IMAGE_SIZE,3])
 
-    final_output_numpy=sess.run(final_output)
-    print(final_output_numpy)
-    plt.figure()
-    plt.imshow(final_output_numpy.astype(np.float32))
-    plt.show()
+    # final_output_numpy=sess.run(final_output)
+    # print(final_output.shape)
+    # plt.figure()
+    # plt.imshow(final_output_numpy.astype(np.uint8))
+    # plt.show()
 
     final_output=tf.reshape(final_output,[-1,IMAGE_SIZE,IMAGE_SIZE,3])
 

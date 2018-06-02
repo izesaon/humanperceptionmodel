@@ -33,7 +33,6 @@ from __future__ import print_function
 
 from datetime import datetime
 import time
-import math
 
 import tensorflow as tf
 
@@ -48,8 +47,6 @@ tf.app.flags.DEFINE_integer('max_steps', 1000000,
                             """Number of batches to run.""")
 tf.app.flags.DEFINE_boolean('log_device_placement', False,
                             """Whether to log device placement.""")
-tf.app.flags.DEFINE_integer('num_examples', 10000,
-                            """Number of examples to run.""")
 tf.app.flags.DEFINE_integer('log_frequency', 10,
                             """How often to log results to the console.""")
 
@@ -68,9 +65,6 @@ def train():
     # Build a Graph that computes the logits predictions from the
     # inference model.b
     logits = cifar10.inference(images)
-
-    # Calculate predictions.
-    top_k_op = tf.nn.in_top_k(logits, labels, 1)
 
     # Calculate loss.
     loss = cifar10.loss(logits, labels)
@@ -101,26 +95,10 @@ def train():
           examples_per_sec = FLAGS.log_frequency * FLAGS.batch_size / duration
           sec_per_batch = float(duration / FLAGS.log_frequency)
 
-          ##ADDED IN
-          coord = tf.train.Coordinator()
-          num_iter = int(math.ceil(FLAGS.num_examples / FLAGS.batch_size))
-          true_count = 0  # Counts the number of correct predictions.
-          total_sample_count = num_iter * FLAGS.batch_size
-          step = 0
-          while step < num_iter and not coord.should_stop():
-            predictions = sess.run([top_k_op])
-            true_count += np.sum(predictions)
-            step += 1
-
-          # Compute precision @ 1.
-          precision = true_count / total_sample_count
-          print('%s: precision @ 1 = %.3f' % (datetime.now(), precision))
-
           format_str = ('%s: step %d, loss = %.2f (%.1f examples/sec; %.3f '
-                        'sec/batch),accuracy= %.3f')
-
+                        'sec/batch)')
           print (format_str % (datetime.now(), self._step, loss_value,
-                               examples_per_sec, sec_per_batch,precision))
+                               examples_per_sec, sec_per_batch))
 
     with tf.train.MonitoredTrainingSession(
         checkpoint_dir=FLAGS.train_dir,
